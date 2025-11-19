@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Smartphone, Layout, Palette, Type, Droplet, Zap, PenTool, Plus } from 'lucide-react'; // Import icons
 import { Header } from './components/Header';
 import { PromptHero } from './components/PromptHero';
@@ -41,7 +41,23 @@ const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<AIModel>('gemini-2.5-flash');
   const [customModeKeys, setCustomModeKeys] = useState<Set<string>>(new Set());
+  const [customApiKey, setCustomApiKey] = useState<string>('');
   
+  // --- Effects ---
+  // Load API Key from local storage on mount
+  useEffect(() => {
+    const storedKey = localStorage.getItem('custom_gemini_api_key');
+    if (storedKey) {
+      setCustomApiKey(storedKey);
+    }
+  }, []);
+
+  // Save API Key to local storage when changed
+  const handleApiKeyChange = (key: string) => {
+    setCustomApiKey(key);
+    localStorage.setItem('custom_gemini_api_key', key);
+  };
+
   // --- Logic ---
   const rebuildPrompt = useCallback((options: Record<string, string>) => {
     const parts = Object.keys(PROMPT_CATEGORIES)
@@ -78,7 +94,6 @@ const App: React.FC = () => {
       } else {
         next.add(categoryKey);
         // Clear existing option if we are opening custom mode
-        // optional: keep it until they type? 
         // UX decision: Let's clear selection so it's clear we are going custom.
         setSelectedOptions(prevOpts => {
           const newOpts = { ...prevOpts };
@@ -113,15 +128,23 @@ const App: React.FC = () => {
   const handleRefine = async () => {
     if (!prompt) return;
 
+    // Check if we have a valid key (either env or custom)
+    const hasKey = process.env.API_KEY || customApiKey;
+    if (!hasKey) {
+      setIsSettingsOpen(true);
+      alert(language === 'en' ? "Please configure your API Key first." : "请先配置您的 API Key。");
+      return;
+    }
+
     setIsRefining(true);
     try {
-      const refined = await refinePromptWithGemini(prompt, selectedModel);
+      const refined = await refinePromptWithGemini(prompt, selectedModel, customApiKey);
       if (refined) {
         setPrompt(refined);
       }
     } catch (error) {
       console.error("Refine failed", error);
-      alert("Failed to refine prompt. Please check your environment configuration.");
+      alert("Failed to refine prompt. Please check your API Key configuration.");
     } finally {
       setIsRefining(false);
     }
@@ -303,6 +326,8 @@ const App: React.FC = () => {
         language={language}
         currentModel={selectedModel}
         onModelChange={setSelectedModel}
+        customApiKey={customApiKey}
+        onApiKeyChange={handleApiKeyChange}
       />
     </div>
   );

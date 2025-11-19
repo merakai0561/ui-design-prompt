@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Zap, Star, ShieldCheck, AlertCircle, Brain } from 'lucide-react';
+import { X, Zap, Star, ShieldCheck, AlertCircle, Brain, Key } from 'lucide-react';
 import { Language, AIModel } from '../types';
 import { UI_TEXT } from '../constants';
 
@@ -9,6 +9,8 @@ interface SettingsModalProps {
   language: Language;
   currentModel: AIModel;
   onModelChange: (model: AIModel) => void;
+  customApiKey: string;
+  onApiKeyChange: (key: string) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -16,11 +18,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   language,
   currentModel,
-  onModelChange
+  onModelChange,
+  customApiKey,
+  onApiKeyChange
 }) => {
   if (!isOpen) return null;
 
-  const hasApiKey = !!process.env.API_KEY;
+  const hasEnvKey = !!process.env.API_KEY;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm animate-in fade-in duration-200">
@@ -47,21 +51,44 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
               {UI_TEXT.apiKeyLabel[language]}
             </label>
-            <div className={`
-              flex items-center gap-3 px-4 py-3 rounded-xl border 
-              ${hasApiKey 
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                : 'bg-red-50 border-red-200 text-red-800'}
-            `}>
-              {hasApiKey ? (
+            
+            {hasEnvKey ? (
+              // Case 1: Environment Variable Exists (Read-only success state)
+              <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-800">
                 <ShieldCheck className="w-5 h-5 shrink-0" />
-              ) : (
-                <AlertCircle className="w-5 h-5 shrink-0" />
-              )}
-              <span className="text-sm font-medium">
-                {hasApiKey ? UI_TEXT.apiKeyConnected[language] : UI_TEXT.apiKeyMissing[language]}
-              </span>
-            </div>
+                <span className="text-sm font-medium">
+                  {UI_TEXT.apiKeyConnected[language]}
+                </span>
+              </div>
+            ) : (
+              // Case 2: No Environment Variable (Show Input)
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 px-4 py-2 rounded-xl border bg-amber-50 border-amber-200 text-amber-800 mb-2">
+                   <AlertCircle className="w-4 h-4 shrink-0" />
+                   <span className="text-xs font-medium">
+                     {UI_TEXT.apiKeyMissing[language]}
+                   </span>
+                </div>
+                
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Key className="h-4 w-4 text-slate-400" />
+                  </div>
+                  <input 
+                    type="password"
+                    value={customApiKey}
+                    onChange={(e) => onApiKeyChange(e.target.value)}
+                    placeholder={UI_TEXT.apiKeyInputPlaceholder[language]}
+                    className="block w-full pl-10 pr-4 py-3 rounded-xl text-sm bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all"
+                  />
+                </div>
+                <p className="text-xs text-slate-400 px-1">
+                  {language === 'en' 
+                    ? 'Your key is stored locally in your browser and never sent to our servers.' 
+                    : '您的密钥仅存储在本地浏览器中，不会发送到我们的服务器。'}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Model Selection */}

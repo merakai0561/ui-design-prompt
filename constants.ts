@@ -15,7 +15,9 @@ export const UI_TEXT: UIConstants = {
   modelPro: { zh: "专业 (Gemini 3 Pro) - 高质量", en: "Pro (Gemini 3 Pro) - High Quality" },
   apiKeyLabel: { zh: "API Key 状态", en: "API Key Status" },
   apiKeyConnected: { zh: "已连接 (环境变量)", en: "Connected (Env Variable)" },
-  apiKeyMissing: { zh: "未检测到 (请配置 process.env.API_KEY)", en: "Missing (Config process.env.API_KEY)" },
+  apiKeyMissing: { zh: "未检测到环境变量 (使用自定义 Key)", en: "Env Variable Missing (Using Custom Key)" },
+  apiKeyInputLabel: { zh: "输入 Gemini API Key", en: "Enter Gemini API Key" },
+  apiKeyInputPlaceholder: { zh: "粘贴你的 API Key (AIza...)", en: "Paste your API Key here (AIza...)" },
   close: { zh: "关闭", en: "Close" },
   customPlaceholder: { zh: "自定义输入...", en: "Custom input..." },
   customButton: { zh: "自定义", en: "Custom" }

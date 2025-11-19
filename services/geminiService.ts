@@ -1,14 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 
-// We use process.env.API_KEY exclusively as per guidelines
-export const refinePromptWithGemini = async (currentPrompt: string, model: string = 'gemini-2.5-flash'): Promise<string> => {
-  const apiKey = process.env.API_KEY;
+export const refinePromptWithGemini = async (currentPrompt: string, model: string = 'gemini-2.5-flash', customApiKey?: string): Promise<string> => {
+  // Prioritize custom key if provided, otherwise fallback to env variable
+  const apiKey = customApiKey || process.env.API_KEY;
+  
   if (!apiKey) {
-    console.error("API Key is missing in environment variables");
+    console.error("API Key is missing. Please set process.env.API_KEY or provide a custom key.");
     throw new Error("API Key is missing");
   }
 
-  // Initialize the client with the environment variable
+  // Initialize the client with the key
   const ai = new GoogleGenAI({ apiKey });
 
   if (!currentPrompt.trim()) {

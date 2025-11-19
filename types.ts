@@ -42,6 +42,8 @@ export interface UIConstants {
   apiKeyLabel: LocalizedText;
   apiKeyConnected: LocalizedText;
   apiKeyMissing: LocalizedText;
+  apiKeyInputLabel: LocalizedText;
+  apiKeyInputPlaceholder: LocalizedText;
   close: LocalizedText;
   customPlaceholder: LocalizedText;
   customButton: LocalizedText;
