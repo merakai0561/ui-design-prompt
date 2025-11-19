@@ -2,7 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 
 export const refinePromptWithGemini = async (currentPrompt: string, model: string = 'gemini-2.5-flash', customApiKey?: string): Promise<string> => {
   // Prioritize custom key if provided, otherwise fallback to env variable
-  const apiKey = customApiKey || process.env.API_KEY;
+  // Trim to remove accidental whitespace
+  const apiKey = (customApiKey || process.env.API_KEY || "").trim();
   
   if (!apiKey) {
     console.error("API Key is missing. Please set process.env.API_KEY or provide a custom key.");

@@ -77,7 +77,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <input 
                     type="password"
                     value={customApiKey}
-                    onChange={(e) => onApiKeyChange(e.target.value)}
+                    onChange={(e) => onApiKeyChange(e.target.value.trim())}
                     placeholder={UI_TEXT.apiKeyInputPlaceholder[language]}
                     className="block w-full pl-10 pr-4 py-3 rounded-xl text-sm bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all"
                   />

@@ -48,7 +48,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const storedKey = localStorage.getItem('custom_gemini_api_key');
     if (storedKey) {
-      setCustomApiKey(storedKey);
+      setCustomApiKey(storedKey.trim());
     }
   }, []);
 
@@ -142,9 +142,11 @@ const App: React.FC = () => {
       if (refined) {
         setPrompt(refined);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Refine failed", error);
-      alert("Failed to refine prompt. Please check your API Key configuration.");
+      // Show specific error message to help debug
+      const errorMsg = error.message || "Unknown error";
+      alert(`Refine failed: ${errorMsg}\n\nPlease check your API Key and selected Model.`);
     } finally {
       setIsRefining(false);
     }
