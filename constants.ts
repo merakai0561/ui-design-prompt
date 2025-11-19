@@ -20,7 +20,9 @@ export const UI_TEXT: UIConstants = {
   apiKeyInputPlaceholder: { zh: "粘贴你的 API Key (AIza...)", en: "Paste your API Key here (AIza...)" },
   close: { zh: "关闭", en: "Close" },
   customPlaceholder: { zh: "自定义输入...", en: "Custom input..." },
-  customButton: { zh: "自定义", en: "Custom" }
+  customButton: { zh: "自定义", en: "Custom" },
+  baseUrlLabel: { zh: "API 代理地址 (Base URL) - 可选", en: "API Base URL (Proxy) - Optional" },
+  baseUrlPlaceholder: { zh: "默认使用 Google 官方地址", en: "Default: Google Official API" }
 };
 
 export const PROMPT_CATEGORIES: PromptData = {

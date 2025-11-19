@@ -47,4 +47,6 @@ export interface UIConstants {
   close: LocalizedText;
   customPlaceholder: LocalizedText;
   customButton: LocalizedText;
+  baseUrlLabel: LocalizedText;
+  baseUrlPlaceholder: LocalizedText;
 }

@@ -42,13 +42,18 @@ const App: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<AIModel>('gemini-2.5-flash');
   const [customModeKeys, setCustomModeKeys] = useState<Set<string>>(new Set());
   const [customApiKey, setCustomApiKey] = useState<string>('');
+  const [customBaseUrl, setCustomBaseUrl] = useState<string>('');
   
   // --- Effects ---
-  // Load API Key from local storage on mount
+  // Load Settings from local storage on mount
   useEffect(() => {
     const storedKey = localStorage.getItem('custom_gemini_api_key');
     if (storedKey) {
       setCustomApiKey(storedKey.trim());
+    }
+    const storedUrl = localStorage.getItem('custom_gemini_base_url');
+    if (storedUrl) {
+      setCustomBaseUrl(storedUrl.trim());
     }
   }, []);
 
@@ -56,6 +61,12 @@ const App: React.FC = () => {
   const handleApiKeyChange = (key: string) => {
     setCustomApiKey(key);
     localStorage.setItem('custom_gemini_api_key', key);
+  };
+
+  // Save Base URL to local storage
+  const handleBaseUrlChange = (url: string) => {
+    setCustomBaseUrl(url);
+    localStorage.setItem('custom_gemini_base_url', url);
   };
 
   // --- Logic ---
@@ -138,15 +149,25 @@ const App: React.FC = () => {
 
     setIsRefining(true);
     try {
-      const refined = await refinePromptWithGemini(prompt, selectedModel, customApiKey);
+      const refined = await refinePromptWithGemini(prompt, selectedModel, customApiKey, customBaseUrl);
       if (refined) {
         setPrompt(refined);
       }
     } catch (error: any) {
       console.error("Refine failed", error);
-      // Show specific error message to help debug
+      
       const errorMsg = error.message || "Unknown error";
-      alert(`Refine failed: ${errorMsg}\n\nPlease check your API Key and selected Model.`);
+      const errorStr = JSON.stringify(error);
+
+      // Specific handling for Location/Region errors
+      if (errorStr.includes("User location is not supported") || errorMsg.includes("User location is not supported")) {
+         const tip = language === 'en' 
+          ? "Tip: This error usually means your network region is blocked. Please try using a VPN or configure a Custom Base URL (Proxy) in Settings." 
+          : "提示：此错误通常表示您所在的网络区域不支持访问 Gemini。请尝试使用 VPN，或在设置中配置自定义 Base URL (代理地址)。";
+         alert(`Refine failed: ${errorMsg}\n\n${tip}`);
+      } else {
+         alert(`Refine failed: ${errorMsg}\n\nPlease check your API Key, Base URL, and network.`);
+      }
     } finally {
       setIsRefining(false);
     }
@@ -330,6 +351,8 @@ const App: React.FC = () => {
         onModelChange={setSelectedModel}
         customApiKey={customApiKey}
         onApiKeyChange={handleApiKeyChange}
+        customBaseUrl={customBaseUrl}
+        onBaseUrlChange={handleBaseUrlChange}
       />
     </div>
   );

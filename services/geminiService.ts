@@ -1,6 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 
-export const refinePromptWithGemini = async (currentPrompt: string, model: string = 'gemini-2.5-flash', customApiKey?: string): Promise<string> => {
+export const refinePromptWithGemini = async (
+  currentPrompt: string, 
+  model: string = 'gemini-2.5-flash', 
+  customApiKey?: string,
+  customBaseUrl?: string
+): Promise<string> => {
   // Prioritize custom key if provided, otherwise fallback to env variable
   // Trim to remove accidental whitespace
   const apiKey = (customApiKey || process.env.API_KEY || "").trim();
@@ -10,8 +15,14 @@ export const refinePromptWithGemini = async (currentPrompt: string, model: strin
     throw new Error("API Key is missing");
   }
 
-  // Initialize the client with the key
-  const ai = new GoogleGenAI({ apiKey });
+  // Initialize the client with the key and optional base URL (proxy)
+  // Using 'any' for options to avoid strict type issues if the SDK definition varies
+  const clientOptions: any = { apiKey };
+  if (customBaseUrl && customBaseUrl.trim()) {
+    clientOptions.baseUrl = customBaseUrl.trim();
+  }
+
+  const ai = new GoogleGenAI(clientOptions);
 
   if (!currentPrompt.trim()) {
     return "";

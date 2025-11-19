@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Zap, Star, ShieldCheck, AlertCircle, Brain, Key } from 'lucide-react';
+import { X, Zap, Star, ShieldCheck, AlertCircle, Brain, Key, Globe } from 'lucide-react';
 import { Language, AIModel } from '../types';
 import { UI_TEXT } from '../constants';
 
@@ -11,6 +11,8 @@ interface SettingsModalProps {
   onModelChange: (model: AIModel) => void;
   customApiKey: string;
   onApiKeyChange: (key: string) => void;
+  customBaseUrl: string;
+  onBaseUrlChange: (url: string) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -20,7 +22,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   currentModel,
   onModelChange,
   customApiKey,
-  onApiKeyChange
+  onApiKeyChange,
+  customBaseUrl,
+  onBaseUrlChange
 }) => {
   if (!isOpen) return null;
 
@@ -29,11 +33,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50 sticky top-0 z-10">
           <h3 className="text-lg font-bold text-slate-900">{UI_TEXT.settingsTitle[language]}</h3>
           <button 
             onClick={onClose}
@@ -53,7 +57,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </label>
             
             {hasEnvKey ? (
-              // Case 1: Environment Variable Exists (Read-only success state)
               <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-800">
                 <ShieldCheck className="w-5 h-5 shrink-0" />
                 <span className="text-sm font-medium">
@@ -61,7 +64,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </span>
               </div>
             ) : (
-              // Case 2: No Environment Variable (Show Input)
               <div className="space-y-2">
                 <div className="flex items-center gap-3 px-4 py-2 rounded-xl border bg-amber-50 border-amber-200 text-amber-800 mb-2">
                    <AlertCircle className="w-4 h-4 shrink-0" />
@@ -84,11 +86,35 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
                 <p className="text-xs text-slate-400 px-1">
                   {language === 'en' 
-                    ? 'Your key is stored locally in your browser and never sent to our servers.' 
-                    : '您的密钥仅存储在本地浏览器中，不会发送到我们的服务器。'}
+                    ? 'Stored locally in your browser.' 
+                    : '仅存储在本地浏览器中。'}
                 </p>
               </div>
             )}
+          </div>
+
+          {/* Base URL (Proxy) */}
+          <div className="space-y-3">
+            <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+              {UI_TEXT.baseUrlLabel[language]}
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Globe className="h-4 w-4 text-slate-400" />
+              </div>
+              <input 
+                type="text"
+                value={customBaseUrl}
+                onChange={(e) => onBaseUrlChange(e.target.value.trim())}
+                placeholder={UI_TEXT.baseUrlPlaceholder[language]}
+                className="block w-full pl-10 pr-4 py-3 rounded-xl text-sm bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all"
+              />
+            </div>
+            <p className="text-xs text-slate-400 px-1">
+              {language === 'en' 
+                ? 'Use this if you are in a restricted region (e.g., https://my-proxy.com)' 
+                : '如果您在受限地区（如中国大陆），请填写代理地址 (例如 Cloudflare Worker 地址)'}
+            </p>
           </div>
 
           {/* Model Selection */}
