@@ -18,6 +18,7 @@ export interface Group {
 
 export interface Category {
   title: LocalizedText;
+  prefix: string; // Prefix for the prompt (e.g., "Style:")
   options?: Option[];
   groups?: Group[];
 }

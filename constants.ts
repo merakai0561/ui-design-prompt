@@ -28,6 +28,7 @@ export const UI_TEXT: UIConstants = {
 export const PROMPT_CATEGORIES: PromptData = {
   platform: {
     title: { zh: "📱 1. 平台与场景", en: "📱 1. Platform & Context" },
+    prefix: "Platform:",
     options: [
       { label: { zh: "iOS 应用", en: "iOS App" }, value: "iOS Mobile App UI, Human Interface Guidelines" },
       { label: { zh: "SaaS 后台", en: "SaaS Dashboard" }, value: "SaaS Dashboard Interface, B2B Web App" },
@@ -38,15 +39,19 @@ export const PROMPT_CATEGORIES: PromptData = {
   },
   subject: {
     title: { zh: "🖼️ 2. 页面类型", en: "🖼️ 2. Page Type" },
+    prefix: "Subject:",
     options: [
       { label: { zh: "登录/注册", en: "Login/Signup" }, value: "Login Screen, Sign Up Flow, Authentication" },
       { label: { zh: "个人中心", en: "User Profile" }, value: "User Profile, Settings Page" },
       { label: { zh: "数据图表", en: "Charts" }, value: "Data Visualization, Analytics Charts" },
-      { label: { zh: "电商详情", en: "E-commerce" }, value: "Product Detail Page, Shopping Cart" }
+      { label: { zh: "电商详情", en: "E-commerce" }, value: "Product Detail Page, Shopping Cart" },
+      { label: { zh: "列表页", en: "List View" }, value: "List View, Data Table, Card Grid, Search Results, Filter Sidebar" },
+      { label: { zh: "表单录入", en: "Form Input" }, value: "Input Form, Registration Form, Multi-step Wizard, Input Fields, Validation State" }
     ]
   },
   style: {
     title: { zh: "🎨 3. 设计风格", en: "🎨 3. Visual Style" },
+    prefix: "Style:",
     groups: [
       { 
         name: { zh: "现代标准", en: "Modern Standard" }, 
@@ -74,6 +79,7 @@ export const PROMPT_CATEGORIES: PromptData = {
   },
   typography: {
     title: { zh: "🔤 4. 字体排版", en: "🔤 4. Typography" },
+    prefix: "Typography:",
     options: [
       { label: { zh: "现代无衬线", en: "Modern Sans" }, value: "Inter Font, Clean Sans-Serif Typography" },
       { label: { zh: "优雅衬线体", en: "Elegant Serif" }, value: "Editorial Serif Font, Elegant Typography" },
@@ -83,15 +89,23 @@ export const PROMPT_CATEGORIES: PromptData = {
   },
   color: {
     title: { zh: "🌈 5. 配色主题", en: "🌈 5. Color Palette" },
+    prefix: "Color:",
     options: [
       { label: { zh: "蓝白科技", en: "Blue & White" }, value: "Professional Blue and White, Medical/Tech Theme" },
       { label: { zh: "暗黑模式", en: "Dark Mode" }, value: "Dark Mode, Deep Grey background, Neon accents" },
       { label: { zh: "柔和粉彩", en: "Pastel" }, value: "Pastel color palette, Soft, Friendly" },
-      { label: { zh: "黑金奢华", en: "Black & Gold" }, value: "Black and Gold, Luxury palette" }
+      { label: { zh: "黑金奢华", en: "Black & Gold" }, value: "Black and Gold, Luxury palette" },
+      { label: { zh: "赛博朋克", en: "Cyberpunk" }, value: "Cyberpunk, Neon Pink and Blue, High Contrast, Glow" },
+      { label: { zh: "自然大地", en: "Earth Tones" }, value: "Earth Tones, Beige, Brown, Forest Green, Organic" },
+      { label: { zh: "复古怀旧", en: "Retro" }, value: "Retro 90s UI, Pixelated, Vibrant Primary Colors" },
+      { label: { zh: "单色主义", en: "Monochromatic" }, value: "Monochromatic color scheme, Shades of a single color" },
+      { label: { zh: "活力渐变", en: "Gradient" }, value: "Vibrant Mesh Gradients, Colorful Background, Modern" },
+      { label: { zh: "商务深蓝", en: "Corporate" }, value: "Corporate Navy Blue, Trustworthy, Professional Finance" }
     ]
   },
   quality: {
     title: { zh: "✨ 6. 画质与渲染", en: "✨ 6. Quality" },
+    prefix: "Quality:",
     options: [
       { label: { zh: "Dribbble热门", en: "Dribbble Trending" }, value: "Trending on Dribbble, High fidelity mockup" },
       { label: { zh: "8K超清", en: "8K Resolution" }, value: "8k resolution, Unreal Engine 5 Render, Sharp focus" }

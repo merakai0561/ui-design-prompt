@@ -19,23 +19,31 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 };
 
 // Helper to check if a value is one of the predefined options
-const isValuePredefined = (categoryKey: string, value: string): boolean => {
+const isValuePredefined = (categoryKey: string, value: string | string[]): boolean => {
   const category = PROMPT_CATEGORIES[categoryKey];
-  if (!value) return false;
+  if (!value || value.length === 0) return false;
   
-  if (category.options) {
-    return category.options.some(opt => opt.value === value);
+  const checkValue = (val: string) => {
+    if (category.options) {
+      return category.options.some(opt => opt.value === val);
+    }
+    if (category.groups) {
+      return category.groups.some(group => group.items.some(opt => opt.value === val));
+    }
+    return false;
+  };
+
+  if (Array.isArray(value)) {
+    return value.every(checkValue);
   }
-  if (category.groups) {
-    return category.groups.some(group => group.items.some(opt => opt.value === value));
-  }
-  return false;
+  return checkValue(value);
 };
 
 const App: React.FC = () => {
   // --- State ---
   const [language, setLanguage] = useState<Language>('en');
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  // Changed to support array for multi-select (string | string[])
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
   const [prompt, setPrompt] = useState<string>('');
   const [isRefining, setIsRefining] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -70,9 +78,19 @@ const App: React.FC = () => {
   };
 
   // --- Logic ---
-  const rebuildPrompt = useCallback((options: Record<string, string>) => {
+  const rebuildPrompt = useCallback((options: Record<string, string | string[]>) => {
     const parts = Object.keys(PROMPT_CATEGORIES)
-      .map(key => options[key])
+      .map(key => {
+        const val = options[key];
+        if (!val || (Array.isArray(val) && val.length === 0)) return null;
+        
+        const category = PROMPT_CATEGORIES[key];
+        const prefix = category.prefix || '';
+        const valueStr = Array.isArray(val) ? val.join(', ') : val;
+        
+        // Combine prefix and value (e.g. "Style: Minimalist UI")
+        return `${prefix} ${valueStr}`;
+      })
       .filter(Boolean);
     setPrompt(parts.join(', '));
   }, []);
@@ -80,21 +98,51 @@ const App: React.FC = () => {
   const handleOptionToggle = (categoryKey: string, value: string) => {
     setSelectedOptions(prev => {
       const newOptions = { ...prev };
-      if (newOptions[categoryKey] === value) {
-        delete newOptions[categoryKey];
-      } else {
-        newOptions[categoryKey] = value;
+      
+      // Enable Multi-Select for 'style' category
+      if (categoryKey === 'style') {
+        const current = newOptions[categoryKey];
+        let newValues: string[] = [];
+
+        if (Array.isArray(current)) {
+          newValues = [...current];
+        } else if (current) {
+          newValues = [current];
+        }
+
+        if (newValues.includes(value)) {
+          newValues = newValues.filter(v => v !== value);
+        } else {
+          newValues.push(value);
+        }
+
+        if (newValues.length === 0) {
+          delete newOptions[categoryKey];
+        } else {
+          newOptions[categoryKey] = newValues;
+        }
+      } 
+      // Single Select for others
+      else {
+        if (newOptions[categoryKey] === value) {
+          delete newOptions[categoryKey];
+        } else {
+          newOptions[categoryKey] = value;
+        }
       }
+      
       rebuildPrompt(newOptions);
       return newOptions;
     });
 
     // If selecting a regular option, hide the custom input
-    setCustomModeKeys(prev => {
-      const next = new Set(prev);
-      next.delete(categoryKey);
-      return next;
-    });
+    if (categoryKey !== 'style') {
+      setCustomModeKeys(prev => {
+        const next = new Set(prev);
+        next.delete(categoryKey);
+        return next;
+      });
+    }
   };
 
   const toggleCustomMode = (categoryKey: string) => {
@@ -104,8 +152,7 @@ const App: React.FC = () => {
         next.delete(categoryKey);
       } else {
         next.add(categoryKey);
-        // Clear existing option if we are opening custom mode
-        // UX decision: Let's clear selection so it's clear we are going custom.
+        // When opening custom mode, clear existing chips for single-selects to avoid confusion
         setSelectedOptions(prevOpts => {
           const newOpts = { ...prevOpts };
           delete newOpts[categoryKey];
@@ -178,23 +225,35 @@ const App: React.FC = () => {
     const category = PROMPT_CATEGORIES[key];
     const currentSelection = selectedOptions[key];
     const isPredefined = isValuePredefined(key, currentSelection || '');
-    const customInputValue = isPredefined ? '' : (currentSelection || '');
+    
+    let customInputValue = '';
+    if (!isPredefined) {
+        if (typeof currentSelection === 'string') customInputValue = currentSelection;
+    }
+
     const isCustomMode = customModeKeys.has(key);
 
-    // Reusable Custom Button Component
+    const isSelected = (val: string) => {
+      if (Array.isArray(currentSelection)) {
+        return currentSelection.includes(val);
+      }
+      return currentSelection === val;
+    };
+
+    // Reusable Custom Button Component with Dashed Border
     const CustomButton = () => (
       <button
         onClick={() => toggleCustomMode(key)}
         className={`
-          relative px-3 py-2 rounded-lg text-[15px] font-medium text-left transition-all duration-200 w-full
-          flex items-center justify-center gap-2 select-none border border-dashed
+          relative px-4 py-3 rounded-xl text-[15px] font-medium text-center transition-all duration-200 w-full
+          flex items-center justify-center gap-2 select-none border-2 border-dashed group
           ${isCustomMode 
-            ? 'bg-violet-50 border-violet-500 text-violet-700' 
-            : 'bg-white text-slate-500 border-slate-300 hover:border-violet-400 hover:text-violet-600'
+            ? 'bg-violet-50 border-violet-400 text-violet-700 ring-1 ring-violet-400/30' 
+            : 'bg-transparent text-slate-400 border-slate-200 hover:border-violet-400 hover:text-violet-600 hover:bg-violet-50/30'
           }
         `}
       >
-        <Plus size={16} />
+        <Plus size={16} strokeWidth={2.5} className={isCustomMode ? 'text-violet-600' : 'text-slate-300 group-hover:text-violet-500'} />
         <span className={isCustomMode ? 'font-bold' : 'font-medium'}>
           {UI_TEXT.customButton[language]}
         </span>
@@ -205,12 +264,12 @@ const App: React.FC = () => {
       <div className="space-y-3">
         {/* Options Grid or Groups */}
         {category.options && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {category.options.map((opt) => (
               <OptionChip
                 key={opt.value}
                 option={opt}
-                isSelected={currentSelection === opt.value}
+                isSelected={isSelected(opt.value)}
                 onToggle={() => handleOptionToggle(key, opt.value)}
                 language={language}
               />
@@ -220,19 +279,19 @@ const App: React.FC = () => {
         )}
 
         {category.groups && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {category.groups.map((group, idx) => (
-              <div key={idx} className="rounded-2xl p-1">
-                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 ml-1 flex items-center gap-2 font-sans">
-                  <span className="w-1 h-1 rounded-full bg-violet-300"></span>
+              <div key={idx} className="p-0.5">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3 ml-1 flex items-center gap-2 font-sans">
+                  <div className="w-1.5 h-1.5 rounded-full bg-violet-200"></div>
                   {group.name[language]}
                 </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {group.items.map((opt) => (
                     <OptionChip
                       key={opt.value}
                       option={opt}
-                      isSelected={currentSelection === opt.value}
+                      isSelected={isSelected(opt.value)}
                       onToggle={() => handleOptionToggle(key, opt.value)}
                       language={language}
                     />
@@ -240,8 +299,8 @@ const App: React.FC = () => {
                 </div>
               </div>
             ))}
-            <div className="flex justify-start">
-               <div className="w-full sm:w-auto sm:min-w-[120px]">
+            <div className="flex justify-start pt-1">
+               <div className="w-full sm:w-auto sm:min-w-[140px]">
                   <CustomButton />
                </div>
             </div>
@@ -250,9 +309,9 @@ const App: React.FC = () => {
 
         {/* Custom Input Field - Conditionally Rendered */}
         {isCustomMode && (
-          <div className="pt-1 animate-fade-in-up">
+          <div className="pt-2 animate-fade-in-up">
             <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <PenTool className="h-4 w-4 text-violet-500" />
               </div>
               <input
@@ -262,9 +321,9 @@ const App: React.FC = () => {
                 onChange={(e) => handleCustomInput(key, e.target.value)}
                 placeholder={UI_TEXT.customPlaceholder[language]}
                 className={`
-                  block w-full pl-10 pr-4 py-2 rounded-lg text-sm transition-all duration-200 outline-none
+                  block w-full pl-11 pr-4 py-3 rounded-xl text-sm transition-all duration-200 outline-none
                   bg-white border border-violet-200 text-slate-900 placeholder-slate-400 
-                  focus:border-violet-500 focus:ring-2 focus:ring-violet-100 shadow-sm
+                  focus:border-violet-500 focus:ring-4 focus:ring-violet-100 shadow-sm
                 `}
               />
             </div>
@@ -285,11 +344,12 @@ const App: React.FC = () => {
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         
         {/* LEFT COLUMN: Options */}
-        <div className="flex-1 overflow-y-auto no-scrollbar pb-80 lg:pb-20 order-1 lg:order-1 bg-white">
-          <div className="max-w-6xl mx-auto p-4 lg:p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto no-scrollbar pb-80 lg:pb-24 order-1 lg:order-1 bg-white">
+          <div className="max-w-6xl mx-auto p-5 lg:p-8 space-y-8">
             {Object.keys(PROMPT_CATEGORIES).map((key, index) => {
               const Icon = CATEGORY_ICONS[key] || Layout;
-              const isSelected = !!selectedOptions[key];
+              const selection = selectedOptions[key];
+              const hasSelection = Array.isArray(selection) ? selection.length > 0 : !!selection;
               
               return (
                 <section 
@@ -297,15 +357,17 @@ const App: React.FC = () => {
                   className="animate-fade-in-up" 
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="flex items-center gap-3 mb-2 group">
+                  <div className="flex items-center gap-4 mb-4 group">
                     <div className={`
-                      w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-300
-                      ${isSelected ? 'bg-violet-600 text-white' : 'bg-slate-50 text-violet-600 border border-slate-100'}
+                      w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm
+                      ${hasSelection 
+                        ? 'bg-violet-600 text-white shadow-violet-200 scale-110' 
+                        : 'bg-slate-50 text-violet-600 border border-slate-100 group-hover:scale-105 group-hover:border-violet-100'}
                     `}>
-                      <Icon size={18} strokeWidth={2.5} />
+                      <Icon size={20} strokeWidth={2.5} />
                     </div>
                     <div>
-                      <h2 className={`text-base font-bold transition-colors ${isSelected ? 'text-violet-900' : 'text-slate-900'}`}>
+                      <h2 className={`text-base font-bold transition-colors ${hasSelection ? 'text-violet-900' : 'text-slate-900'}`}>
                         {PROMPT_CATEGORIES[key].title[language].split(' ').slice(1).join(' ')}
                       </h2>
                     </div>
@@ -318,7 +380,7 @@ const App: React.FC = () => {
               );
             })}
             
-            <div className="pt-8 text-center text-slate-300 text-xs font-medium">
+            <div className="pt-12 text-center text-slate-300 text-xs font-medium">
                Crafted for UI/UX Perfection
             </div>
           </div>
@@ -327,8 +389,9 @@ const App: React.FC = () => {
         {/* RIGHT COLUMN: Output */}
         <div className="
           fixed bottom-0 left-0 right-0 h-auto z-40 
-          lg:static lg:w-[420px] lg:h-full lg:order-2
+          lg:static lg:w-[460px] lg:h-full lg:order-2
           bg-white border-t lg:border-t-0 lg:border-l border-slate-200
+          shadow-[-10px_0_40px_-15px_rgba(0,0,0,0.05)]
         ">
           <PromptHero 
             language={language}

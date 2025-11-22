@@ -13,11 +13,11 @@ export const OptionChip: React.FC<OptionChipProps> = ({ option, isSelected, onTo
     <button
       onClick={onToggle}
       className={`
-        relative px-3 py-2 rounded-lg text-[15px] font-medium text-left transition-colors duration-200 w-full
-        flex items-center justify-center group border select-none
+        relative px-4 py-3 rounded-xl text-[15px] font-medium text-center transition-all duration-200 w-full
+        flex items-center justify-center border select-none
         ${isSelected 
-          ? 'bg-violet-50 border-violet-500 text-violet-700' 
-          : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:text-slate-900'
+          ? 'bg-violet-50 border-violet-500 text-violet-700 shadow-sm ring-1 ring-violet-500/20' 
+          : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:text-slate-900 hover:shadow-sm hover:bg-slate-50'
         }
       `}
     >
